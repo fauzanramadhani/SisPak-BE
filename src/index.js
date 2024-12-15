@@ -1,25 +1,25 @@
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const express = require("express");
+const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 const app = express();
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Hello from the backend!' });
+app.get("/", (req, res) => {
+  res.json({ message: "Hello from the backend!" });
 });
 
-app.get('/users', async (req, res) => {
+app.get("/users", async (req, res) => {
   try {
     const users = await prisma.user.findMany();
     res.json(users);
   } catch (error) {
-    res.status(500).json({ error: 'Unable to fetch users' });
+    res.status(500).json({ error: "Unable to fetch users" });
   }
 });
 
-app.post('/users', async (req, res) => {
+app.post("/users", async (req, res) => {
   try {
     const { name, email } = req.body;
     const newUser = await prisma.user.create({
@@ -27,7 +27,8 @@ app.post('/users', async (req, res) => {
     });
     res.status(201).json(newUser);
   } catch (error) {
-    res.status(400).json({ error: 'Unable to create user' });
+    console.log(error);
+    res.status(400).json({ error: "Unable to create user" });
   }
 });
 
