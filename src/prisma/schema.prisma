@@ -8,7 +8,9 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  uid       String @id @unique
+  email     String @unique
+  name      String
+  dob       BigInt
+  createdAt BigInt @default(dbgenerated("EXTRACT(EPOCH FROM NOW()) * 1000"))
 }
