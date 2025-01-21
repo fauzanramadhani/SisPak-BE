@@ -8,9 +8,79 @@ datasource db {
 }
 
 model User {
-  uid       String @id @unique
-  email     String @unique
-  name      String
-  dob       BigInt
-  createdAt BigInt @default(dbgenerated("EXTRACT(EPOCH FROM NOW()) * 1000"))
+  uid        String    @id @unique
+  email      String    @unique
+  name       String
+  dob        BigInt
+  createdAt  BigInt    @default(dbgenerated("EXTRACT(EPOCH FROM NOW()) * 1000"))
+  systems    System[]  @relation("UserSystems")
+}
+
+model Method {
+  id          Int       @id @default(autoincrement())
+  title       String
+  summary     String
+  description String
+  createdAt   BigInt    @default(dbgenerated("EXTRACT(EPOCH FROM NOW()) * 1000"))
+  systems     System[]  @relation("MethodSystems")
+  steps       MethodStep[] @relation("MethodSteps")
+}
+
+model MethodStep {
+  id          Int       @id @default(autoincrement())
+  methodId    Int
+  stepNumber  Int
+  title       String
+  description String
+  method      Method      @relation("MethodSteps", fields: [methodId], references: [id], onDelete: Cascade)
+}
+
+model System {
+  id          Int         @id @default(autoincrement())
+  title       String
+  description String
+  methodId    Int
+  createdBy   String
+  createdAt   BigInt      @default(dbgenerated("EXTRACT(EPOCH FROM NOW()) * 1000"))
+  user        User        @relation("UserSystems", fields: [createdBy], references: [uid], onDelete: Cascade)
+  method      Method      @relation("MethodSystems", fields: [methodId], references: [id], onDelete: Cascade)
+  symptoms    Symptom[]   @relation("SystemSymptoms")
+  diseases    Disease[]   @relation("SystemDiseases")
+}
+
+model Symptom {
+  id          Int       @id @default(autoincrement())
+  code        String
+  description String
+  systemId    Int
+  createdAt   BigInt    @default(dbgenerated("EXTRACT(EPOCH FROM NOW()) * 1000"))
+  system      System    @relation("SystemSymptoms", fields: [systemId], references: [id], onDelete: Cascade)
+  symptomWithDiseases SymptomWithDisease[] @relation("SymptomToDisease")
+}
+
+model Disease {
+  id          Int       @id @default(autoincrement())
+  code        String
+  description String
+  systemId    Int
+  createdAt   BigInt    @default(dbgenerated("EXTRACT(EPOCH FROM NOW()) * 1000"))
+  system      System    @relation("SystemDiseases", fields: [systemId], references: [id], onDelete: Cascade)
+  symptomWithDiseases SymptomWithDisease[] @relation("DiseaseToSymptom")
+}
+
+model SymptomWithDisease {
+  id          Int       @id @default(autoincrement())
+  symptomId   Int
+  diseaseId   Int
+  createdAt   BigInt    @default(dbgenerated("EXTRACT(EPOCH FROM NOW()) * 1000"))
+  symptom     Symptom   @relation("SymptomToDisease", fields: [symptomId], references: [id], onDelete: Cascade)
+  disease     Disease   @relation("DiseaseToSymptom", fields: [diseaseId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id                   Int          @id @default(autoincrement())
+  title                String
+  description          String
+  category             String
+  price                Float
 }

@@ -16,6 +16,7 @@ const authenticateUid = async (req, res, next) => {
     return res.status(401).json({
       status: "error",
       message: "Unauthorized: UID is invalid",
+      code: 401,
     });
   }
 
@@ -25,9 +26,10 @@ const authenticateUid = async (req, res, next) => {
     });
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(461).json({
         status: "error",
         message: "User not found",
+        code: 461,
       });
     }
 
@@ -45,6 +47,7 @@ const authenticateUid = async (req, res, next) => {
     res.status(500).json({
       status: "error",
       message: "Internal server error",
+      code: 500,
     });
   }
 };
