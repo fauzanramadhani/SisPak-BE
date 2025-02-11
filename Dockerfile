@@ -29,7 +29,7 @@ RUN npx prisma generate --schema=./src/prisma/schema.prisma
 EXPOSE 3000
 
 # Create a startup script
-COPY startup.sh .
+COPY startup.sh ./
 RUN chmod +x startup.sh
 
 # Run the startup script

@@ -1,83 +1,5 @@
 const prisma = require('../../prisma/client');
 
-const createSystem = async (req, res) => {
-  const { title, description } = req.body;
-  const method_id = Number(req.query.method_id); // mungkin error karena bukan int
-  const currentUser = req.user.uid;
-
-  try {
-    if (![title, description, method_id].every(Boolean)) {
-      return res.status(400).json({
-        code: 400,
-        status: 'error',
-        message: 'Invalid request',
-      });
-    }
-
-    const newSystem = await prisma.system.create({
-      data: {
-        title: title,
-        description: description,
-        methodId: method_id,
-        createdBy: currentUser,
-      },
-    });
-
-    res.status(201).json({
-      code: 201,
-      status: 'success',
-      message: 'System created successfully',
-      data: newSystem.id,
-    });
-  } catch (error) {
-    console.error('Error create System:', error);
-    res.status(500).json({
-      code: 500,
-      status: 'error',
-      message: 'Internal server error',
-    });
-  }
-};
-
-const getSystemById = async (req, res) => {
-  try {
-    const system_id = Number(req.query.system_id);
-
-    if (!system_id) {
-      return res.status(400).json({
-        code: 400,
-        status: 'error',
-        message: 'Invalid request.',
-      });
-    }
-
-    const system = await prisma.system.findUnique({
-      where: {
-        id: system_id
-      },
-      include: {
-        method: true,
-        symptoms: true,
-        diseases: true,
-      },
-    })
-
-    res.status(200).json({
-      code: 200,
-      status: 'success',
-      message: 'Get system by id successfully',
-      data: system
-    });
-  } catch (error) {
-    console.error('Error create System:', error);
-    res.status(500).json({
-      code: 500,
-      status: 'error',
-      message: 'Internal server error',
-    });
-  }
-}
-
 const addSymptoms = async (req, res) => {
   try {
     const symptoms = req.body;
@@ -138,7 +60,7 @@ const addDisease = async (req, res) => {
     diseases.forEach((disease) => {
       if (!disease.code || !disease.description) {
         throw new Error(
-          `Missing required fields in symptom: ${JSON.stringify(disease)}`
+          `Missing required fields in disease: ${JSON.stringify(disease)}`
         );
       }
     })
@@ -166,4 +88,48 @@ const addDisease = async (req, res) => {
   }
 };
 
-module.exports = { createSystem, addSymptoms, getSystemById, addDisease };
+const synchronize = async (req, res) => {
+  try {
+    const { system_id } = req.query;
+    const symptomsWithDisease = req.body;
+
+    if (!Array.isArray(symptomsWithDisease) || !system_id) {
+      return res.status(400).json({
+        code: 400,
+        status: 'error',
+        message: 'Invalid request.',
+      });
+    }
+
+    const syncSymptomsWithDisease = async (symptomsWithDisease) => {
+      for (const { disease_id, symptoms_ids } of symptomsWithDisease) {
+        for (const symptom_id of symptoms_ids) {
+          await prisma.symptomWithDisease.create({
+            data: {
+              symptomId: symptom_id,
+              diseaseId: disease_id,
+            },
+          });
+        }
+      }
+    };
+
+    await syncSymptomsWithDisease(symptomsWithDisease);
+
+    return res.status(201).json({
+      code: 201,
+      status: 'success',
+      message: "Symptom and Disease successfully synchronized",
+    });
+
+  } catch (error) {
+    console.error('Error synchronize symptoms with diseases:', error);
+    return res.status(500).json({
+      code: 500,
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+};
+
+module.exports = { addSymptoms, addDisease, synchronize };
