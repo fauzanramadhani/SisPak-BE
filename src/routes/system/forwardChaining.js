@@ -1,11 +1,13 @@
 const express = require("express");
 const authenticateUid = require("../../middlewares/authMiddleware");
-const { addSymptoms, addDisease, synchronize} = require("../../controllers/system/forwardChainingController");
+const { updateSymptoms, getSymptoms, updateDiseases, synchronize, getDiseases} = require("../../controllers/system/forwardChainingController");
 
 const router = express.Router();
 
-router.post("/add_symptoms", authenticateUid, addSymptoms);
-router.post("/add_disease", authenticateUid, addDisease);
+router.post("/update_symptoms", authenticateUid, updateSymptoms);
+router.get("/symptoms", authenticateUid, getSymptoms);
+router.post("/update_diseases", authenticateUid, updateDiseases);
+router.get("/diseases", authenticateUid, getDiseases);
 router.post("/synchronize", authenticateUid, synchronize);
 
 module.exports = router;
