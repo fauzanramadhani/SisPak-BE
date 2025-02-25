@@ -245,4 +245,56 @@ const synchronize = async (req, res) => {
   }
 };
 
-module.exports = { updateSymptoms, updateDiseases, synchronize, getSymptoms, getDiseases };
+const getSymptomWithDisease = async (req, res) => {
+  
+  try {
+    const { system_id } = req.query;
+
+    if (!system_id) {
+      return res.status(400).json({
+        code: 400,
+        status: 'error',
+        message: 'Invalid request.',
+      });
+    }
+
+    const allDisease = await prisma.disease.findMany({
+      where: {
+        systemId: Number(system_id),
+      },
+    });
+
+    const diseaseIds = allDisease.map(({ id }) => id);
+
+    const symptomsWithDiseases = await prisma.symptomWithDisease.findMany({
+      where: { diseaseId: { in: diseaseIds } },
+      include: { symptom: true, disease: true },
+    });
+
+    const groupedDiseases = symptomsWithDiseases.reduce((acc, { disease, symptom }) => {
+      if (!acc[disease.id]) {
+        acc[disease.id] = { ...disease, symptoms: [] };
+      }
+      acc[disease.id].symptoms.push(symptom);
+      return acc;
+    }, {});
+
+    
+
+    res.status(200).json({
+      code: 200,
+      status: 'success',
+      message: 'Get symptom with disease successfully',
+      data: Object.values(groupedDiseases)
+    });
+  } catch (error) {
+    console.error('Error get all symptom with disease:', error);
+    res.status(500).json({
+      code: 500,
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+}
+
+module.exports = { updateSymptoms, updateDiseases, synchronize, getSymptoms, getDiseases, getSymptomWithDisease };
